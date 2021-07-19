@@ -50,6 +50,7 @@ class Board:
         self.fillBoard()
         pass
         
+    
 
     def checkValidMoves(self, piece):
         valid = []
@@ -72,21 +73,34 @@ class Board:
                     p = Piece(newX, newY, 40, 'green')
                     self.possibleMoves[(newX, newY)] = p
                     p.draw(self.xlength, self.yheight)
+                
+                self.checkValidEatingMoves(piece, newX, newY, move)
+                
 
-                # If the current piece can eat another piece
-                if (newX, newY) in self.positions and self.positions[(newX, newY)][0].color != self.positions[(piece.x, piece.y)][0].color:
-                    destinationX = move[0] * 2 + piece.x
-                    destinationY = move[1] * 2 + piece.y
+    def checkValidEatingMoves(self, piece, newX, newY, move):
+        leftDown = (-1, -1)
+        rightDown = (1, -1)
+        leftUp = (-1, 1)
+        rightUp = (1, 1)
+        moves = [leftDown, leftUp, rightDown, rightUp]
 
-                    # Check that the destination is not occupied
-                    if (destinationX, destinationY) not in self.positions or (not self.positions[(destinationX, destinationY)][1]):
-                        eatenPiece = self.positions[(newX, newY)][0]
-                        p = Piece(destinationX, destinationY, 40, 'green')
-                        self.possibleMoves[(destinationX, destinationY)] = p
-                        # self.positions[(newX, newY)] = (eatenPiece, False)
-                        p.draw(self.xlength, self.yheight)
+        # If the current piece can eat another piece
+        if (newX, newY) in self.positions and self.positions[(newX, newY)][0].color != piece.color and self.positions[(newX, newY)][1]:
+            destinationX = move[0] * 2 + piece.x
+            destinationY = move[1] * 2 + piece.y
 
-        
+
+
+            # Check that the destination is not occupied
+            if (destinationX, destinationY) not in self.positions or (not self.positions[(destinationX, destinationY)][1]):
+                eatenPiece = self.positions[(newX, newY)][0]
+                p = Piece(destinationX, destinationY, 40, 'green')
+                self.possibleMoves[(destinationX, destinationY)] = p
+                p.draw(self.xlength, self.yheight)
+
+                for move in moves:
+                    nX = destinationX + move[0]
+                    nY = destinationY + move[1]
 
         
     def fillBoard(self):
@@ -104,7 +118,7 @@ class Board:
         x = int(mx // self.squareXLength)
         y = int(my // self.squareYHeight)
 
-
+        # If you have just clicked on a checker piece
         if (x, y) in self.positions and self.positions[(x, y)][1] == True:
             self.possibleMoves = {}
             p = self.positions[(x, y)][0]
@@ -113,11 +127,21 @@ class Board:
             return p
         
         
+        # If you are trying to make a move 
         if (x, y) in self.possibleMoves and start != None:
             p = Piece(x, y, 40, start.color)
             self.positions[(start.x, start.y)] = (start, False)
             self.positions[(x, y)] = (p, True)
             self.possibleMoves = {}
+
+            # If you have eaten another piece then the difference between the start and current vertex is more than 1
+            if abs(start.x - x) + abs(start.y - y) > 2:
+                # We have eaten something, let us find out where it was
+                eatenX = (start.x + x)//2
+                eatenY = (start.y + y)//2
+                eaten = self.positions[(eatenX, eatenY)][0]
+                self.positions[(eatenX, eatenY)] = (eaten, False)
+
 
         return None
 
