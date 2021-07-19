@@ -69,10 +69,22 @@ class Board:
 
                 # If the new position is not already occupied
                 if (newX, newY) not in self.positions or not self.positions[(newX, newY)][1]:
-                    print(move)
                     p = Piece(newX, newY, 40, 'green')
                     self.possibleMoves[(newX, newY)] = p
                     p.draw(self.xlength, self.yheight)
+
+                # If the current piece can eat another piece
+                if (newX, newY) in self.positions and self.positions[(newX, newY)][0].color != self.positions[(piece.x, piece.y)][0].color:
+                    destinationX = move[0] * 2 + piece.x
+                    destinationY = move[1] * 2 + piece.y
+
+                    # Check that the destination is not occupied
+                    if (destinationX, destinationY) not in self.positions or (not self.positions[(destinationX, destinationY)][1]):
+                        eatenPiece = self.positions[(newX, newY)][0]
+                        p = Piece(destinationX, destinationY, 40, 'green')
+                        self.possibleMoves[(destinationX, destinationY)] = p
+                        # self.positions[(newX, newY)] = (eatenPiece, False)
+                        p.draw(self.xlength, self.yheight)
 
         
 
