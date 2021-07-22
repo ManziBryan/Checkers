@@ -1,12 +1,10 @@
-# Stopping Here, Because I can't figure out how to plot on the same plot the possible moves
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-from matplotlib.patches import Circle
 from piece import Piece
 from cs1lib import *
 
 start = None
 goal = None
+pressedQ = False
+pressedSpaceBar = False
 
 class Board:
     def __init__(self, boardImage, width, height):
@@ -18,12 +16,16 @@ class Board:
         self.squareYHeight = self.yheight/8
         self.positions = {}
         self.possibleMoves = {}
+        self.turn = 1
+        self.colors = ['red', 'white']
+        self.scores = [12, 12]
 
         startY = 0
         startX = 1
+
         while startY < 3:
             while startX < 8:
-                p = Piece(startX, startY, 40, 'red')
+                p = Piece(startX, startY, 40, self.colors[0])
                 self.positions[(startX, startY)] = (p, True)
                 startX += 2
             startX += 1
@@ -34,7 +36,7 @@ class Board:
         startX = 0
         while startY < 8:
             while startX < 8:
-                p = Piece(startX, startY, 40, 'white')
+                p = Piece(startX, startY, 40, self.colors[1])
                 self.positions[(startX, startY)] = (p, True)
                 startX += 2
             startX += 1
@@ -47,10 +49,24 @@ class Board:
     def play(self):
 
         draw_image(self.img, 0, 0)
+        self.instructions(str(self.scores[0]), str(self.scores[1]))
         self.fillBoard()
-        pass
+
+    def instructions(self, score0, score1):
+        fontSize = 25
+        set_font_size(fontSize)
+        set_font_bold()
+
+        draw_text(score0, self.xlength + 70, self.yheight -50 )
+        draw_text(score1, self.xlength + 70, 50 )
+
+        draw_text("Press", self.xlength + 50, self.yheight//2 - fontSize * 3)
+        draw_text("SPACEBAR", self.xlength + 20, self.yheight//2 - fontSize)
+        draw_text("to end", self.xlength + 50, self.yheight//2 + fontSize)
+        draw_text("your turn", self.xlength + 35, self.yheight//2 + fontSize * 3)
         
-    
+
+        
 
     def checkValidMoves(self, piece):
         valid = []
@@ -58,7 +74,12 @@ class Board:
         rightDown = (1, -1)
         leftUp = (-1, 1)
         rightUp = (1, 1)
-        moves = [leftDown, leftUp, rightDown, rightUp]
+
+        if piece.color == self.colors[0]:
+            moves = [leftUp, rightUp]
+
+        else:
+            moves = [leftDown, rightDown]
         print(piece.x, piece.y)
 
         for move in moves:
@@ -118,21 +139,24 @@ class Board:
         x = int(mx // self.squareXLength)
         y = int(my // self.squareYHeight)
 
-        # If you have just clicked on a checker piece
+        # If you have just clicked on a checker piece 
         if (x, y) in self.positions and self.positions[(x, y)][1] == True:
-            self.possibleMoves = {}
             p = self.positions[(x, y)][0]
-            start = p
-            self.checkValidMoves(start)
-            return p
+            # If it is this player's turn
+            if self.colors[self.turn] == p.color:
+                self.possibleMoves = {}
+                start = p
+                self.checkValidMoves(start)
+                return p
         
         
-        # If you are trying to make a move 
-        if (x, y) in self.possibleMoves and start != None:
+        # If you are trying to make a move and it is this player's turn
+        if (x, y) in self.possibleMoves and start != None and self.colors[self.turn] == start.color:
             p = Piece(x, y, 40, start.color)
             self.positions[(start.x, start.y)] = (start, False)
             self.positions[(x, y)] = (p, True)
             self.possibleMoves = {}
+
 
             # If you have eaten another piece then the difference between the start and current vertex is more than 1
             if abs(start.x - x) + abs(start.y - y) > 2:
@@ -141,6 +165,9 @@ class Board:
                 eatenY = (start.y + y)//2
                 eaten = self.positions[(eatenX, eatenY)][0]
                 self.positions[(eatenX, eatenY)] = (eaten, False)
+                print(self.scores)
+                self.scores[self.turn] -= 1
+                print(self.scores)
 
 
         return None
@@ -148,4 +175,22 @@ class Board:
     def mousePress(self, mx, my):
         self.findNearbyChecker(mx, my)
 
-        
+    def keyUp(self, key):
+        global pressedQ, pressedSpaceBar
+        if key == "q":
+            pressedQ = False
+        elif key == " ":
+            pressedSpaceBar = False
+    
+
+    def keyDown(self, key):
+        global pressedQ, pressedSpaceBar
+        if key == "q":
+            pressedQ = True
+            cs1_quit()
+        elif key == " ":
+            pressedSpaceBar = True
+            # It is now the next player's turn
+            self.turn += 1
+            self.turn %= 2
+            self.possibleMoves = {}
