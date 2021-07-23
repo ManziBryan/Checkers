@@ -21,3 +21,13 @@ class Piece:
         x = (self.x/8) * width + (width/16)
         y = (self.y/8) * height + (height/16)
         draw_circle(x , y, self.radius)
+
+    def drawText(self, score, width, height):
+        fontSize = 60
+        set_font_size(fontSize)
+        set_fill_color(0, 0.5, 0)
+        set_stroke_color(0, 0, 0.5)
+        set_font_bold()
+        x = (self.x/8) * width + (width/16)
+        y = (self.y/8) * height + (height/16)
+        draw_text(str(score), x, y )
